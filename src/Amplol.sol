@@ -60,20 +60,20 @@ contract Amplol is
         if (block.timestamp < pRebase + timer) revert BadRebase();
         uint256 cTVL = vault.totalBalance() / scalar;
         if (cTVL != pTVL) {
-            uint256 totalSupply = totalSupply();
-            uint256 newSupply = totalSupply * cTVL / pTVL;
-            _rebase(newSupply);
+            uint256 rebaseRatio = cTVL * 1e18 / pTVL; // Calculate the rebase ratio with precision
+            uint256 newSupply = totalSupply() * rebaseRatio / 1e18; // Adjust total supply based on the rebase ratio
+            _rebase(newSupply); // Apply the new total supply
             pTVL = cTVL; // Update the last recorded TVL
             pRebase = block.timestamp; // Update last rebase time
         }
     }
 
-    function _rebase(uint256 newSupply) internal {
+    function _rebase(uint256 _newSupply) internal {
         uint256 currentSupply = totalSupply();
-        if (newSupply > currentSupply) {
-            _mint(address(this), newSupply - currentSupply);
-        } else if (newSupply < currentSupply) {
-            _burn(address(this), currentSupply - newSupply);
+        if (_newSupply > currentSupply) {
+            _mint(address(this), _newSupply - currentSupply); // Mint the difference if the new supply is greater
+        } else if (_newSupply < totalSupply()) {
+            _burn(address(this), currentSupply - _newSupply); // Burn the difference if the new supply is lesser
         }
     }
 

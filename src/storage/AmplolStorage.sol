@@ -6,6 +6,8 @@ import {IVault} from "../interface/IVault.sol";
 
 // Amplol store
 abstract contract AmplolStore is IAmplol {
+  // This will act as the scaling factor for balance calculations
+  uint256 private baseDivisor = 1e18;
   // Previous TVL
   uint256 private pTVL;
   // Previous Rebase
