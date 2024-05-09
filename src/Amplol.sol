@@ -10,6 +10,8 @@ import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
 contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
+    uint256 private constant MULTIPLIER = 1000;
+
     constructor() {
         _disableInitializers();
     }
@@ -58,16 +60,16 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
-        _mint(_recipient, _amount * 1e18 / base);
+        _mint(_recipient, _amount * 1e18 / base * MULTIPLIER);
     }
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
-        _burn(_recipient, _amount * 1e18 / base);
+        _burn(_recipient, _amount * 1e18 / base * MULTIPLIER);
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return super.balanceOf(account) * base / 1e18;
+        return super.balanceOf(account) * base / 1e18 * MULTIPLIER;
     }
 
     function nRebase() external view returns (uint256) {
