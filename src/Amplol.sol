@@ -89,6 +89,5 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     /// @dev Authorizes an upgrade, ensuring that the owner is performing the upgrade
     /// @param newImplementation The new contract implementation to upgrade to
-
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
