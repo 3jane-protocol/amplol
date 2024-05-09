@@ -18,6 +18,4 @@ abstract contract AmplolStore is IAmplol {
     uint256 public timer;
     // 3Jane vault
     IVault public vault;
-    // Amplol minter
-    address public minter;
 }

@@ -6,22 +6,23 @@ import {IVault} from "../interface/IVault.sol";
 // Amplol interface
 interface IAmplol {
     error Bad3Jane();
-    error BadMinter();
     error BadOwner();
+    error BadMinter();
+    error BadBurner();
     error EarlyRebase();
     error BadRebase();
     error BadTransfer();
 
     event NewTimer(uint256 timer);
-    event NewMinter(address indexed minter);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 base, uint256 pTVL, uint256 pRebase);
 
-    function setMinter(address _minter) external;
+    function setTimer(uint256) external;
+    function toggleTransfer() external;
     function rebase() external;
 
-    function minter() external view returns (address);
     function vault() external view returns (IVault);
+    function timer() external view returns (uint256);
     function canTransfer() external view returns (bool);
     function nRebase() external view returns (uint256);
 }

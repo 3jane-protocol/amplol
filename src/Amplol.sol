@@ -20,15 +20,12 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         address _vault,
         uint256 _timer,
         uint256 _pTVL,
-        address _minter,
         address _owner
     ) external initializer {
         if (_vault == address(0)) revert Bad3Jane();
-        if (_minter == address(0)) revert BadMinter();
         if (_owner == address(0)) revert BadOwner();
 
         vault = IVault(_vault);
-        minter = _minter;
         timer = _timer;
         pTVL = _pTVL;
 
@@ -47,12 +44,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         emit ToggleTransfer(canTransfer);
     }
 
-    function setMinter(address _minter) external onlyOwner {
-        if (_minter == address(0)) revert BadMinter();
-        minter = _minter;
-        emit NewMinter(_minter);
-    }
-
     function rebase() public {
         // Too early
         if (block.timestamp < pRebase + timer) revert EarlyRebase();
@@ -65,7 +56,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     function mint(address _recipient, uint256 _amount) external {
-        if (msg.sender != minter) revert BadMinter();
+        if (msg.sender != address(vault)) revert BadMinter();
         _mint(_recipient, _amount * base / 1e18);
     }
 
@@ -83,7 +74,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
     }
 
     function _update(address from, address to, uint256 amount) internal override {
-        if (from != minter && to != address(0) && !canTransfer) revert BadTransfer();
+        if (from != address(0) && to != address(0) && !canTransfer) revert BadTransfer();
         super._update(from, to, amount);
     }
 
