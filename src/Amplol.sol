@@ -58,7 +58,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
-        _mint(_recipient, _amount * base / 1e18);
+        _mint(_recipient, _amount * 1e18 / base);
     }
 
     function burn(address _recipient, uint256 _amount) external {
