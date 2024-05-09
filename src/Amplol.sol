@@ -51,6 +51,11 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         emit NewTimer(_timer);
     }
 
+    function toggleTransfer() external onlyOwner {
+        canTransfer = !canTransfer;
+        emit ToggleTransfer(canTransfer);
+    }
+
     function setMinter(address _minter) external onlyOwner {
         if (_minter == address(0)) revert BadMinter();
         minter = _minter;
@@ -79,6 +84,11 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function nRebase() external view returns (uint256) {
         return pRebase + timer;
+    }
+
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+        if (from != minter && to != address(0) && !canTransfer) revert BadTransfer();
+        super._beforeTokenTransfer(from, to, amount);
     }
 
     /// @dev Authorizes an upgrade, ensuring that the owner is performing the upgrade

@@ -11,10 +11,12 @@ interface IAmplol {
     error BadOwner();
     error EarlyRebase();
     error BadRebase();
+    error BadTransfer();
 
     event NewScalar(uint256 scalar);
     event NewTimer(uint256 timer);
     event NewMinter(address indexed minter);
+    event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 base, uint256 pTVL, uint256 pRebase);
 
     function setScalar(uint256 _scalar) external;
@@ -23,5 +25,6 @@ interface IAmplol {
 
     function scalar() external view returns (uint256);
     function vault() external view returns (IVault);
+    function canTransfer() external view returns (bool);
     function nRebase() external view returns (uint256);
 }

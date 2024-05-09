@@ -12,6 +12,8 @@ abstract contract AmplolStore is IAmplol {
     uint256 internal pTVL;
     // Previous Rebase
     uint256 internal pRebase;
+    // Can transfer
+    uint256 public canTransfer = false;
     // Scalar to smoothen TVL growth curve (if its an issue amplol)
     uint256 public scalar;
     // Timer between rebases
