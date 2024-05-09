@@ -18,19 +18,16 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         string memory _name,
         string memory _symbol,
         address _vault,
-        uint256 _scalar,
         uint256 _timer,
         uint256 _pTVL,
         address _minter,
         address _owner
     ) external initializer {
         if (_vault == address(0)) revert Bad3Jane();
-        if (_scalar == 0) revert BadScalar();
         if (_minter == address(0)) revert BadMinter();
         if (_owner == address(0)) revert BadOwner();
 
         vault = IVault(_vault);
-        scalar = _scalar;
         minter = _minter;
         timer = _timer;
         pTVL = _pTVL;
@@ -38,12 +35,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _transferOwnership(_owner);
         __ReentrancyGuard_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
-    }
-
-    function setScalar(uint256 _scalar) external onlyOwner {
-        if (_scalar == 0) revert BadScalar();
-        scalar = _scalar;
-        emit NewScalar(_scalar);
     }
 
     function setTimer(uint256 _timer) external onlyOwner {
@@ -65,7 +56,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
     function rebase() public {
         // Too early
         if (block.timestamp < pRebase + timer) revert EarlyRebase();
-        uint256 cTVL = vault.totalBalance() / scalar;
+        uint256 cTVL = vault.totalBalance();
         if (cTVL < pTVL) revert BadRebase();
         base *= cTVL / pTVL;
         pTVL = cTVL; // Update the last recorded TVL
@@ -78,6 +69,11 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _mint(_recipient, _amount * base / 1e18);
     }
 
+    function burn(address _recipient, uint256 _amount) external {
+        if (msg.sender != address(vault)) revert BadBurner();
+        _burn(_recipient, _amount * base / 1e18);
+    }
+
     function balanceOf(address account) public view override returns (uint256) {
         return super.balanceOf(account) * base / 1e18;
     }
@@ -86,12 +82,13 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         return pRebase + timer;
     }
 
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+    function _update(address from, address to, uint256 amount) internal override {
         if (from != minter && to != address(0) && !canTransfer) revert BadTransfer();
-        super._beforeTokenTransfer(from, to, amount);
+        super._update(from, to, amount);
     }
 
     /// @dev Authorizes an upgrade, ensuring that the owner is performing the upgrade
     /// @param newImplementation The new contract implementation to upgrade to
+
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }
