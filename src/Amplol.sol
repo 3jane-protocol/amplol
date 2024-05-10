@@ -9,6 +9,8 @@ import {UUPSUpgradeable} from "openzeppelin-contracts/contracts/proxy/utils/UUPS
 import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
+import "forge-std/console.sol";
+
 contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
     uint256 private constant FUN = 1000;
 
@@ -30,6 +32,9 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         vault = IVault(_vault);
         timer = _timer;
         pTVL = _pTVL;
+        base = 1e18;
+        canTransfer = false;
+        pRebase = block.timestamp;
 
         _transferOwnership(_owner);
         __ReentrancyGuard_init_unchained();
@@ -46,18 +51,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         emit ToggleTransfer(canTransfer);
     }
 
-    function rebase() public {
-        // Too early
-        if (block.timestamp < pRebase + timer) revert EarlyRebase();
-        uint256 cTVL = vault.totalBalance();
-        // numba up-only LOL
-        if (cTVL < pTVL) revert BadRebase();
-        base *= cTVL / pTVL;
-        pTVL = cTVL; // Update the last recorded TVL
-        pRebase = block.timestamp; // Update last rebase time
-        emit Rebase(base, pTVL, pRebase);
-    }
-
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
         _mint(_recipient, _amount * 1e18 / base * FUN);
@@ -68,11 +61,23 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _burn(_recipient, _amount * 1e18 / base * FUN);
     }
 
-    function balanceOf(address account) public view override returns (uint256) {
-        return super.balanceOf(account) * base / 1e18 * FUN;
+    function rebase() public {
+        // Too early
+        if (block.timestamp < nRebase()) revert EarlyRebase();
+        uint256 cTVL = vault.totalBalance();
+        // numba up-only LOL
+        if (cTVL < pTVL) revert BadRebase();
+        base *= cTVL / pTVL;
+        pTVL = cTVL; // Update the last recorded TVL
+        pRebase = block.timestamp; // Update last rebase time
+        emit Rebase(base, pTVL, pRebase);
     }
 
-    function nRebase() external view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
+        return super.balanceOf(account) * base / 1e18;
+    }
+
+    function nRebase() public view returns (uint256) {
         return pRebase + timer;
     }
 
