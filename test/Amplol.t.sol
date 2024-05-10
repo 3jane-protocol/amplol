@@ -22,6 +22,7 @@ contract AmplolTest is Test {
     uint256 public timer = 3600;
     uint256 public pTVL = 100;
     uint256 private start;
+    uint256 public startTotalBalance = 100;
 
     address public amplolImplementation;
 
@@ -47,6 +48,7 @@ contract AmplolTest is Test {
         );
 
         start = block.timestamp;
+        vault.setTotalBalance(startTotalBalance);
     }
 
     function testConstructor() public {
@@ -56,6 +58,7 @@ contract AmplolTest is Test {
         assertEq(amplol.name(), name);
         assertEq(amplol.symbol(), symbol);
         assertEq(amplol.canTransfer(), false);
+        assertEq(amplol.base(), 1e18);
     }
 
     function testSetTimer() public {
@@ -135,9 +138,51 @@ contract AmplolTest is Test {
     }
 
     function testRebaseEarlyRebase() public {
-      
+        vm.expectRevert(IAmplol.EarlyRebase.selector);
+        amplol.rebase();
     }
 
+    function testRebaseBadRebase() public {
+        vault.setTotalBalance(startTotalBalance / 2);
+        vm.warp(amplol.nRebase());
+        vm.expectRevert(IAmplol.BadRebase.selector);
+        amplol.rebase();
+    }
+
+    function testRebase() public {
+        // Alice deposits 10 eETH when latest rebase totalBalance = 100 eETH, base = 2.
+        vault.setTotalBalance(startTotalBalance * 2);
+        vm.warp(amplol.nRebase());
+        amplol.rebase();
+
+        uint256 amount = 10 * 1e18;
+        address alice = vm.addr(account);
+        uint256 base = amplol.base();
+        vm.prank(address(vault));
+        amplol.mint(alice, amount);
+
+        assertEq(base, 2 * 1e18);
+        // She gets minted back 5000 (10 eETH / 2 * 1000) AMPLOL’s.
+        // Her balanceOf is still 10000 though
+        assertEq(amplol.balanceOf(alice), amount * FUN);
+
+        // At the next rebase, the totalBalance = 200 eETH and so the base = 4 (2 * 200 / 100).
+        vault.setTotalBalance(startTotalBalance * 4);
+        vm.warp(amplol.nRebase());
+        amplol.rebase();
+
+        base = amplol.base();
+        assertEq(base, 4 * 1e18);
+        // Her minted AMPLOL balance remains the same, but her balanceOf will indicate
+        // that her balance is 20,000 AMPLOL’s (5000 * 4).
+        // Her AMPLOL balance has increased because of the rebase mechanism since
+        // the TVL went up 2x.
+        assertEq(amplol.balanceOf(alice), amount * 2 * FUN);
+        // She later decides to withdraw 50% of her eETH, so 1250 (10 eETH / 4 * 1000) AMPLOL’s get burned.
+        vm.prank(address(vault));
+        amplol.burn(alice, amount / 2);
+        assertEq(amplol.balanceOf(alice), amount * 2 * FUN - amount / 2 * FUN);
+    }
 
     function testnRebase() public {
         assertEq(amplol.nRebase(), start + timer);

@@ -21,6 +21,7 @@ interface IAmplol {
     function toggleTransfer() external;
     function rebase() external;
 
+    function base() external view returns (uint256);
     function vault() external view returns (IVault);
     function timer() external view returns (uint256);
     function canTransfer() external view returns (bool);
