@@ -59,6 +59,7 @@ contract AmplolTest is Test {
         assertEq(amplol.symbol(), symbol);
         assertEq(amplol.canTransfer(), false);
         assertEq(amplol.base(), 1e18);
+        assertEq(amplol.pTVL(), pTVL);
     }
 
     function testSetTimer() public {
