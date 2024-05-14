@@ -9,8 +9,6 @@ import {UUPSUpgradeable} from "openzeppelin-contracts/contracts/proxy/utils/UUPS
 import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
-import "forge-std/console.sol";
-
 contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
     uint256 private constant FUN = 1000;
 
