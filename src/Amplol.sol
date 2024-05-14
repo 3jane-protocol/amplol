@@ -77,6 +77,10 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         return super.balanceOf(account) * base / 1e18;
     }
 
+    function totalSupply() public view override returns (uint256) {
+        return super.totalSupply() * base / 1e18;
+    }
+
     function nRebase() public view returns (uint256) {
         return pRebase + timer;
     }
