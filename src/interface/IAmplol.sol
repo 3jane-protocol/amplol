@@ -13,10 +13,12 @@ interface IAmplol {
     error BadRebase();
     error BadTransfer();
 
+    event NewVault(address vault);
     event NewTimer(uint256 timer);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 base, uint256 pTVL, uint256 pRebase);
 
+    function setVault(address) external;
     function setTimer(uint256) external;
     function toggleTransfer() external;
     function rebase() external;

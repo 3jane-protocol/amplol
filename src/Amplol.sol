@@ -18,18 +18,12 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _disableInitializers();
     }
 
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        address _vault,
-        uint256 _timer,
-        uint256 _pTVL,
-        address _owner
-    ) external initializer {
-        if (_vault == address(0)) revert Bad3Jane();
+    function initialize(string memory _name, string memory _symbol, uint256 _timer, uint256 _pTVL, address _owner)
+        external
+        initializer
+    {
         if (_owner == address(0)) revert BadOwner();
 
-        vault = IVault(_vault);
         timer = _timer;
         pTVL = _pTVL;
         base = 1e18;
@@ -39,6 +33,12 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _transferOwnership(_owner);
         __ReentrancyGuard_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
+    }
+
+    function setVault(address _vault) external onlyOwner {
+        if (_vault == address(0)) revert Bad3Jane();
+        vault = IVault(_vault);
+        emit NewVault(_vault);
     }
 
     function setTimer(uint256 _timer) external onlyOwner {
