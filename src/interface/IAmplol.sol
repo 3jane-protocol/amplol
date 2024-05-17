@@ -10,7 +10,6 @@ interface IAmplol {
     error BadMinter();
     error BadBurner();
     error EarlyRebase();
-    error BadRebase();
     error BadTransfer();
 
     event NewTimer(uint256 timer);

@@ -142,13 +142,6 @@ contract AmplolTest is Test {
         amplol.rebase();
     }
 
-    function testRebaseBadRebase() public {
-        vault.setTotalBalance(startTotalBalance / 2);
-        vm.warp(amplol.nRebase());
-        vm.expectRevert(IAmplol.BadRebase.selector);
-        amplol.rebase();
-    }
-
     function testRebase() public {
         // Alice deposits 10 eETH when latest rebase totalBalance = 100 eETH, base = 2.
         vault.setTotalBalance(startTotalBalance * 2);
