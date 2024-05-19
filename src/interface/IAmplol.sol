@@ -15,13 +15,13 @@ interface IAmplol {
 
     event NewTimer(uint256 timer);
     event ToggleTransfer(bool canTransfer);
-    event Rebase(uint256 base, uint256 pTVL, uint256 pRebase);
+    event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
 
     function setTimer(uint256) external;
     function toggleTransfer() external;
     function rebase() external;
 
-    function base() external view returns (uint256);
+    function tvl() external view returns (uint256);
     function vault() external view returns (IVault);
     function timer() external view returns (uint256);
     function canTransfer() external view returns (bool);
