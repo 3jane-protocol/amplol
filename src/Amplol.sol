@@ -64,8 +64,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         // Too early
         if (block.timestamp < nRebase()) revert EarlyRebase();
         uint256 newTVL = vault.totalBalance();
-        // numba up-only LOL
-        if (newTVL < tvl) revert BadRebase();
         emit Rebase(tvl, newTVL, pRebase);
         tvl = newTVL; // Update the last recorded TVL
         pRebase = block.timestamp; // Update last rebase time
