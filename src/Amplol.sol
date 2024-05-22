@@ -48,8 +48,8 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
-        _rebase();
         _burn(_recipient, _amount * FUN / tvl);
+        _rebase();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
