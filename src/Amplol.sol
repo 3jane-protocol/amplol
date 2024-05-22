@@ -18,19 +18,14 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _disableInitializers();
     }
 
-    function initialize(
-        string memory _name,
-        string memory _symbol,
-        address _vault,
-        uint256 _timer,
-        uint256 _tvl,
-        address _owner
-    ) external initializer {
+    function initialize(string memory _name, string memory _symbol, address _vault, uint256 _tvl, address _owner)
+        external
+        initializer
+    {
         if (_vault == address(0)) revert Bad3Jane();
         if (_owner == address(0)) revert BadOwner();
 
         vault = IVault(_vault);
-        timer = _timer;
         tvl = _tvl;
         canTransfer = false;
         pRebase = block.timestamp;
@@ -40,11 +35,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         __ERC20_init_unchained(_name, _symbol);
     }
 
-    function setTimer(uint256 _timer) external onlyOwner {
-        timer = _timer;
-        emit NewTimer(_timer);
-    }
-
     function toggleTransfer() external onlyOwner {
         canTransfer = !canTransfer;
         emit ToggleTransfer(canTransfer);
@@ -52,29 +42,25 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
+        _rebase();
         _mint(_recipient, _amount * FUN / tvl);
     }
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
+        _rebase();
         _burn(_recipient, _amount * FUN / tvl);
-    }
-
-    function rebase() public {
-        // Too early
-        if (block.timestamp < nRebase()) revert EarlyRebase();
-        uint256 newTVL = vault.totalBalance();
-        emit Rebase(tvl, newTVL, pRebase);
-        tvl = newTVL; // Update the last recorded TVL
-        pRebase = block.timestamp; // Update last rebase time
     }
 
     function balanceOf(address account) public view override returns (uint256) {
         return super.balanceOf(account) * tvl;
     }
 
-    function nRebase() public view returns (uint256) {
-        return pRebase + timer;
+    function _rebase() internal {
+        uint256 newTVL = vault.totalBalance();
+        emit Rebase(tvl, newTVL, pRebase);
+        tvl = newTVL; // Update the last recorded TVL
+        pRebase = block.timestamp; // Update last rebase time
     }
 
     function _update(address from, address to, uint256 amount) internal override {

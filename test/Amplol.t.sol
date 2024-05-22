@@ -19,13 +19,11 @@ contract AmplolTest is Test {
     uint256 private constant FUN = 1e6;
     string public name = "AMPLOL";
     string public symbol = "AMPLOL";
-    uint256 public timer = 3600;
     uint256 private start;
     uint256 public startTotalBalance = 100 * 1e18;
 
     address public amplolImplementation;
 
-    event NewTimer(uint256 timer);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -40,13 +38,7 @@ contract AmplolTest is Test {
                 new ERC1967Proxy(
                     amplolImplementation,
                     abi.encodeWithSelector(
-                        Amplol.initialize.selector,
-                        name,
-                        symbol,
-                        address(vault),
-                        timer,
-                        startTotalBalance,
-                        address(this)
+                        Amplol.initialize.selector, name, symbol, address(vault), startTotalBalance, address(this)
                     )
                 )
             )
@@ -58,30 +50,12 @@ contract AmplolTest is Test {
 
     function testConstructor() public {
         assertEq(address(amplol.vault()), address(vault));
-        assertEq(amplol.timer(), timer);
         assertEq(amplol.owner(), address(this));
         assertEq(amplol.name(), name);
         assertEq(amplol.symbol(), symbol);
         assertEq(amplol.canTransfer(), false);
         assertEq(amplol.tvl(), startTotalBalance);
-    }
-
-    function testSetTimer() public {
-        vm.expectEmit(true, true, true, true, address(amplol));
-        emit NewTimer(200);
-        amplol.setTimer(200);
-
-        assertEq(amplol.timer(), 200);
-    }
-
-    function testSetTimerUnauthorized() public {
-        vm.prank(vm.addr(account));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, vm.addr(account))
-        );
-
-        amplol.setTimer(100);
+        assertEq(amplol.pRebase(), block.timestamp);
     }
 
     function testToggleTransfer() public {
@@ -142,29 +116,15 @@ contract AmplolTest is Test {
         amplol.burn(address(this), 100);
     }
 
-    function testRebaseEarlyRebase() public {
-        vm.expectRevert(IAmplol.EarlyRebase.selector);
-        amplol.rebase();
-    }
-
-    function testRebaseBadRebase() public {
-        vault.setTotalBalance(startTotalBalance / 2);
-        vm.warp(amplol.nRebase());
-        vm.expectRevert(IAmplol.BadRebase.selector);
-        amplol.rebase();
-    }
-
     function testRebase() public {
         // Alice deposits 10 eETH when latest rebase totalBalance = 100 eETH, base = 2.
         vault.setTotalBalance(startTotalBalance * 2);
-        vm.warp(amplol.nRebase());
-        amplol.rebase();
 
         uint256 amount = 10 * 1e18;
         address alice = vm.addr(account);
-        uint256 tvl = amplol.tvl();
         vm.prank(address(vault));
         amplol.mint(alice, amount);
+        uint256 tvl = amplol.tvl();
 
         assertEq(tvl, startTotalBalance * 2);
         // She gets minted back 5000 (10 eETH / 2 * 1000) AMPLOL’s.
@@ -173,8 +133,9 @@ contract AmplolTest is Test {
 
         // At the next rebase, the totalBalance = 200 eETH and so the base = 4 (2 * 200 / 100).
         vault.setTotalBalance(startTotalBalance * 4);
-        vm.warp(amplol.nRebase());
-        amplol.rebase();
+
+        vm.prank(address(vault));
+        amplol.mint(alice, 1);
 
         tvl = amplol.tvl();
         assertEq(tvl, startTotalBalance * 4);
@@ -187,9 +148,5 @@ contract AmplolTest is Test {
         vm.prank(address(vault));
         amplol.burn(alice, amount / 2);
         assertEq(amplol.balanceOf(alice), amount * 2 * FUN - amount / 2 * FUN);
-    }
-
-    function testnRebase() public {
-        assertEq(amplol.nRebase(), start + timer);
     }
 }

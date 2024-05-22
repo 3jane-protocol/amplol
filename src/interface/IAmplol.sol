@@ -9,20 +9,15 @@ interface IAmplol {
     error BadOwner();
     error BadMinter();
     error BadBurner();
-    error EarlyRebase();
     error BadTransfer();
 
-    event NewTimer(uint256 timer);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
 
-    function setTimer(uint256) external;
     function toggleTransfer() external;
-    function rebase() external;
 
     function tvl() external view returns (uint256);
     function vault() external view returns (IVault);
-    function timer() external view returns (uint256);
     function canTransfer() external view returns (bool);
-    function nRebase() external view returns (uint256);
+    function pRebase() external view returns (uint256);
 }
