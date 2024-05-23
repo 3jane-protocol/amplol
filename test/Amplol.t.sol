@@ -12,6 +12,7 @@ import {MockVault} from "../src/mocks/MockVault.sol";
 
 contract AmplolTest is Test {
     uint256 public constant account = 1;
+    uint256 public constant account2 = 2;
 
     Amplol public amplol;
     MockVault public vault;
@@ -124,6 +125,21 @@ contract AmplolTest is Test {
 
         assertEq(amplol.balanceOf(vm.addr(account)), 0);
         assertEq(amplol.totalSupply(), 0);
+    }
+
+    function testBurnerMin() public {
+        vm.prank(address(vault));
+
+        uint256 amount = 1e18;
+
+        amplol.mint(vm.addr(account2), amount);
+        vault.setTotalBalance(startTotalBalance / 2);
+        vm.prank(address(vault));
+        amplol.mint(vm.addr(1), amount);
+        vm.prank(address(vault));
+        amplol.burn(vm.addr(account2), amount);
+
+        assertEq(amplol.balanceOf(vm.addr(account2)), 0);
     }
 
     function testBurnUnauthorized() public {

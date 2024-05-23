@@ -4,6 +4,7 @@ pragma solidity ^0.8.13;
 import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
@@ -40,7 +41,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
-        _burn(_recipient, _amount * FUN / tvl);
+        _burn(_recipient, Math.min(super.balanceOf(_recipient), _amount * FUN / tvl));
         _rebase();
     }
 
@@ -49,7 +50,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
     }
 
     function totalSupply() public view override returns (uint256) {
-        return super.totalSupply() * base / 1e18;
+        return super.totalSupply() * tvl;
     }
 
     function _rebase() internal {
