@@ -14,4 +14,6 @@ abstract contract AmplolStore is IAmplol {
     bool public canTransfer;
     // 3Jane vault
     IVault public vault;
+    // Gap is left to avoid storage collisions. 
+    uint256[30] private ____gap;
 }
