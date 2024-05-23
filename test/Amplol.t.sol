@@ -16,17 +16,19 @@ contract AmplolTest is Test {
     Amplol public amplol;
     MockVault public vault;
 
-    uint256 private constant FUN = 1e6;
+    uint256 private constant FUN = 1000;
     string public name = "AMPLOL";
     string public symbol = "AMPLOL";
+    uint256 public timer = 3600;
+    uint256 public pTVL = 100;
     uint256 private start;
-    uint256 public startTotalBalance = 100 * 1e18;
+    uint256 public startTotalBalance = 100;
 
     address public amplolImplementation;
 
-    event NewVault(address vault, uint256 tvl);
+    event NewTimer(uint256 timer);
     event ToggleTransfer(bool canTransfer);
-    event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
+    event Rebase(uint256 base, uint256 pTVL, uint256 pRebase);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function setUp() public {
@@ -38,38 +40,43 @@ contract AmplolTest is Test {
             address(
                 new ERC1967Proxy(
                     amplolImplementation,
-                    abi.encodeWithSelector(Amplol.initialize.selector, name, symbol, address(this))
+                    abi.encodeWithSelector(
+                        Amplol.initialize.selector, name, symbol, address(vault), timer, pTVL, address(this)
+                    )
                 )
             )
         );
 
         start = block.timestamp;
-        amplol.setVault(address(vault), startTotalBalance);
         vault.setTotalBalance(startTotalBalance);
     }
 
     function testConstructor() public {
         assertEq(address(amplol.vault()), address(vault));
+        assertEq(amplol.timer(), timer);
         assertEq(amplol.owner(), address(this));
         assertEq(amplol.name(), name);
         assertEq(amplol.symbol(), symbol);
         assertEq(amplol.canTransfer(), false);
-        assertEq(amplol.tvl(), startTotalBalance);
+        assertEq(amplol.base(), 1e18);
     }
 
-    function testSetVaultAlreadySet() public {
-        vm.expectRevert(IAmplol.Bad3Jane.selector);
-        amplol.setVault(address(1), 1);
+    function testSetTimer() public {
+        vm.expectEmit(true, true, true, true, address(amplol));
+        emit NewTimer(200);
+        amplol.setTimer(200);
+
+        assertEq(amplol.timer(), 200);
     }
 
-    function testSetVaultUnauthorized() public {
+    function testSetTimerUnauthorized() public {
         vm.prank(vm.addr(account));
 
         vm.expectRevert(
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, vm.addr(account))
         );
 
-        amplol.setVault(address(1), 1);
+        amplol.setTimer(100);
     }
 
     function testToggleTransfer() public {
@@ -94,14 +101,13 @@ contract AmplolTest is Test {
     function testMint() public {
         vm.prank(address(vault));
 
-        uint256 amount = 1e18;
+        uint256 amount = 100;
 
         vm.expectEmit(true, true, true, true, address(amplol));
-        emit Transfer(address(0), vm.addr(account), amount * FUN / startTotalBalance);
+        emit Transfer(address(0), vm.addr(account), amount * FUN);
         amplol.mint(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), amount * FUN);
-        assertEq(amplol.totalSupply(), amount * FUN);
     }
 
     function testMintUnauthorized() public {
@@ -113,17 +119,16 @@ contract AmplolTest is Test {
     function testBurner() public {
         vm.prank(address(vault));
 
-        uint256 amount = 1e18;
+        uint256 amount = 100;
 
         amplol.mint(vm.addr(account), amount);
 
         vm.expectEmit(true, true, true, true, address(amplol));
-        emit Transfer(vm.addr(account), address(0), amount * FUN / startTotalBalance);
+        emit Transfer(vm.addr(account), address(0), amount * FUN);
         vm.prank(address(vault));
         amplol.burn(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), 0);
-        assertEq(amplol.totalSupply(), 0);
     }
 
     function testBurnUnauthorized() public {
@@ -132,42 +137,54 @@ contract AmplolTest is Test {
         amplol.burn(address(this), 100);
     }
 
+    function testRebaseEarlyRebase() public {
+        vm.expectRevert(IAmplol.EarlyRebase.selector);
+        amplol.rebase();
+    }
+
+    function testRebaseBadRebase() public {
+        vault.setTotalBalance(startTotalBalance / 2);
+        vm.warp(amplol.nRebase());
+        vm.expectRevert(IAmplol.BadRebase.selector);
+        amplol.rebase();
+    }
+
     function testRebase() public {
         // Alice deposits 10 eETH when latest rebase totalBalance = 100 eETH, base = 2.
         vault.setTotalBalance(startTotalBalance * 2);
+        vm.warp(amplol.nRebase());
+        amplol.rebase();
 
         uint256 amount = 10 * 1e18;
         address alice = vm.addr(account);
+        uint256 base = amplol.base();
         vm.prank(address(vault));
         amplol.mint(alice, amount);
-        uint256 tvl = amplol.tvl();
 
-        assertEq(tvl, startTotalBalance * 2);
+        assertEq(base, 2 * 1e18);
         // She gets minted back 5000 (10 eETH / 2 * 1000) AMPLOL’s.
         // Her balanceOf is still 10000 though
         assertEq(amplol.balanceOf(alice), amount * FUN);
-        assertEq(amplol.totalSupply(), amount * FUN);
 
         // At the next rebase, the totalBalance = 200 eETH and so the base = 4 (2 * 200 / 100).
         vault.setTotalBalance(startTotalBalance * 4);
+        vm.warp(amplol.nRebase());
+        amplol.rebase();
 
-        vm.prank(address(vault));
-        amplol.mint(alice, 1);
-
-        tvl = amplol.tvl();
-        assertEq(tvl, startTotalBalance * 4);
+        base = amplol.base();
+        assertEq(base, 4 * 1e18);
         // Her minted AMPLOL balance remains the same, but her balanceOf will indicate
         // that her balance is 20,000 AMPLOL’s (5000 * 4).
         // Her AMPLOL balance has increased because of the rebase mechanism since
         // the TVL went up 2x.
         assertEq(amplol.balanceOf(alice), amount * 2 * FUN);
-
-        assertEq(amplol.totalSupply(), amount * 2 * FUN);
         // She later decides to withdraw 50% of her eETH, so 1250 (10 eETH / 4 * 1000) AMPLOL’s get burned.
         vm.prank(address(vault));
         amplol.burn(alice, amount / 2);
-
         assertEq(amplol.balanceOf(alice), amount * 2 * FUN - amount / 2 * FUN);
-        assertEq(amplol.totalSupply(), amount * 2 * FUN - amount / 2 * FUN);
+    }
+
+    function testnRebase() public {
+        assertEq(amplol.nRebase(), start + timer);
     }
 }
