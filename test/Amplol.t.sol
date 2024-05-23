@@ -24,7 +24,7 @@ contract AmplolTest is Test {
 
     address public amplolImplementation;
 
-    event NewVault(address vault);
+    event NewVault(address vault, uint256 tvl);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
     event Transfer(address indexed from, address indexed to, uint256 value);
@@ -38,13 +38,13 @@ contract AmplolTest is Test {
             address(
                 new ERC1967Proxy(
                     amplolImplementation,
-                    abi.encodeWithSelector(Amplol.initialize.selector, name, symbol, startTotalBalance, address(this))
+                    abi.encodeWithSelector(Amplol.initialize.selector, name, symbol, address(this))
                 )
             )
         );
 
         start = block.timestamp;
-        amplol.setVault(address(vault));
+        amplol.setVault(address(vault), startTotalBalance);
         vault.setTotalBalance(startTotalBalance);
     }
 
@@ -55,15 +55,11 @@ contract AmplolTest is Test {
         assertEq(amplol.symbol(), symbol);
         assertEq(amplol.canTransfer(), false);
         assertEq(amplol.tvl(), startTotalBalance);
-        assertEq(amplol.pRebase(), block.timestamp);
     }
 
-    function testSetVault() public {
-        vm.expectEmit(true, true, true, true, address(amplol));
-        emit NewVault(address(1));
-        amplol.setVault(address(1));
-
-        assertEq(address(amplol.vault()), address(1));
+    function testSetVaultAlreadySet() public {
+        vm.expectRevert(IAmplol.Bad3Jane.selector);
+        amplol.setVault(address(1), 1);
     }
 
     function testSetVaultUnauthorized() public {
@@ -73,7 +69,7 @@ contract AmplolTest is Test {
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, vm.addr(account))
         );
 
-        amplol.setVault(address(1));
+        amplol.setVault(address(1), 1);
     }
 
     function testToggleTransfer() public {

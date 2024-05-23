@@ -11,11 +11,11 @@ interface IAmplol {
     error BadBurner();
     error BadTransfer();
 
-    event NewVault(address vault);
+    event NewVault(address vault, uint256 tvl);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
 
-    function setVault(address) external;
+    function setVault(address, uint256) external;
     function toggleTransfer() external;
     function tvl() external view returns (uint256);
     function vault() external view returns (IVault);

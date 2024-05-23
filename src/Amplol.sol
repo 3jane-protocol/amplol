@@ -9,8 +9,6 @@ import {UUPSUpgradeable} from "openzeppelin-contracts/contracts/proxy/utils/UUPS
 import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
-import "forge-std/console.sol";
-
 contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
     uint256 private constant FUN = 1e6;
 
@@ -18,28 +16,20 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         _disableInitializers();
     }
 
-    function initialize(string memory _name, string memory _symbol, uint256 _pTVL, address _owner)
-        external
-        initializer
-    {
+    function initialize(string memory _name, string memory _symbol, address _owner) external initializer {
         if (_owner == address(0)) revert BadOwner();
-
-        pTVL = _pTVL;
-        base = 1e18;
-        canTransfer = false;
-        pRebase = block.timestamp;
-
         _transferOwnership(_owner);
         __ReentrancyGuard_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
     }
 
-    function setVault(address _vault) external onlyOwner {
-        if (_vault == address(0)) revert Bad3Jane();
+    function setVault(address _vault, uint256 _tvl) external onlyOwner {
+        if (_vault == address(0) || address(vault) != address(0)) revert Bad3Jane();
         vault = IVault(_vault);
-        emit NewVault(_vault);
+        tvl = _tvl;
+        emit NewVault(_vault, tvl);
     }
-    
+
     function toggleTransfer() external onlyOwner {
         canTransfer = !canTransfer;
         emit ToggleTransfer(canTransfer);
