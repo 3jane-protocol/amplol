@@ -12,19 +12,18 @@ import {IVault} from "./interface/IVault.sol";
 import "forge-std/console.sol";
 
 contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
-    uint256 private constant FUN = 1000;
+    uint256 private constant FUN = 1e6;
 
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(string memory _name, string memory _symbol, uint256 _timer, uint256 _pTVL, address _owner)
+    function initialize(string memory _name, string memory _symbol, uint256 _pTVL, address _owner)
         external
         initializer
     {
         if (_owner == address(0)) revert BadOwner();
 
-        timer = _timer;
         pTVL = _pTVL;
         base = 1e18;
         canTransfer = false;
@@ -40,12 +39,7 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
         vault = IVault(_vault);
         emit NewVault(_vault);
     }
-
-    function setTimer(uint256 _timer) external onlyOwner {
-        timer = _timer;
-        emit NewTimer(_timer);
-    }
-
+    
     function toggleTransfer() external onlyOwner {
         canTransfer = !canTransfer;
         emit ToggleTransfer(canTransfer);
@@ -53,32 +47,25 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
 
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
-        _mint(_recipient, _amount * 1e18 / base * FUN);
+        _rebase();
+        _mint(_recipient, _amount * FUN / tvl);
     }
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
-        _burn(_recipient, _amount * 1e18 / base * FUN);
-    }
-
-    function rebase() public {
-        // Too early
-        if (block.timestamp < nRebase()) revert EarlyRebase();
-        uint256 cTVL = vault.totalBalance();
-        // numba up-only LOL
-        if (cTVL < pTVL) revert BadRebase();
-        base *= cTVL / pTVL;
-        pTVL = cTVL; // Update the last recorded TVL
-        pRebase = block.timestamp; // Update last rebase time
-        emit Rebase(base, pTVL, pRebase);
+        _burn(_recipient, _amount * FUN / tvl);
+        _rebase();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return super.balanceOf(account) * base / 1e18;
+        return super.balanceOf(account) * tvl;
     }
 
-    function nRebase() public view returns (uint256) {
-        return pRebase + timer;
+    function _rebase() internal {
+        uint256 newTVL = vault.totalBalance();
+        emit Rebase(tvl, newTVL, pRebase);
+        tvl = newTVL; // Update the last recorded TVL
+        pRebase = block.timestamp; // Update last rebase time
     }
 
     function _update(address from, address to, uint256 amount) internal override {
