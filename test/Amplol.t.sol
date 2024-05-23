@@ -101,6 +101,7 @@ contract AmplolTest is Test {
         amplol.mint(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), amount * FUN);
+        assertEq(amplol.totalSupply(), amount * FUN);
     }
 
     function testMintUnauthorized() public {
@@ -122,6 +123,7 @@ contract AmplolTest is Test {
         amplol.burn(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), 0);
+        assertEq(amplol.totalSupply(), 0);
     }
 
     function testBurnUnauthorized() public {
@@ -144,6 +146,7 @@ contract AmplolTest is Test {
         // She gets minted back 5000 (10 eETH / 2 * 1000) AMPLOL’s.
         // Her balanceOf is still 10000 though
         assertEq(amplol.balanceOf(alice), amount * FUN);
+        assertEq(amplol.totalSupply(), amount * FUN);
 
         // At the next rebase, the totalBalance = 200 eETH and so the base = 4 (2 * 200 / 100).
         vault.setTotalBalance(startTotalBalance * 4);
@@ -158,9 +161,13 @@ contract AmplolTest is Test {
         // Her AMPLOL balance has increased because of the rebase mechanism since
         // the TVL went up 2x.
         assertEq(amplol.balanceOf(alice), amount * 2 * FUN);
+
+        assertEq(amplol.totalSupply(), amount * 2 * FUN);
         // She later decides to withdraw 50% of her eETH, so 1250 (10 eETH / 4 * 1000) AMPLOL’s get burned.
         vm.prank(address(vault));
         amplol.burn(alice, amount / 2);
+
         assertEq(amplol.balanceOf(alice), amount * 2 * FUN - amount / 2 * FUN);
+        assertEq(amplol.totalSupply(), amount * 2 * FUN - amount / 2 * FUN);
     }
 }

@@ -48,6 +48,10 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
         return super.balanceOf(account) * tvl;
     }
 
+    function totalSupply() public view override returns (uint256) {
+        return super.totalSupply() * base / 1e18;
+    }
+
     function _rebase() internal {
         uint256 newTVL = vault.totalBalance();
         emit Rebase(tvl, newTVL, pRebase);
