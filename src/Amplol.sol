@@ -3,13 +3,11 @@ pragma solidity ^0.8.13;
 
 import {ERC20Upgradeable} from "openzeppelin-contracts-upgradeable/contracts/token/ERC20/ERC20Upgradeable.sol";
 import {OwnableUpgradeable} from "openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from
-    "openzeppelin-contracts-upgradeable/contracts/utils/ReentrancyGuardUpgradeable.sol";
 import {UUPSUpgradeable} from "openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
 import {AmplolStore} from "./storage/AmplolStorage.sol";
 import {IVault} from "./interface/IVault.sol";
 
-contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable, AmplolStore {
+contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, AmplolStore {
     uint256 private constant FUN = 1e6;
 
     constructor() {
@@ -19,7 +17,6 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, ReentrancyGuardUpgradea
     function initialize(string memory _name, string memory _symbol, address _owner) external initializer {
         if (_owner == address(0)) revert BadOwner();
         _transferOwnership(_owner);
-        __ReentrancyGuard_init_unchained();
         __ERC20_init_unchained(_name, _symbol);
     }
 
