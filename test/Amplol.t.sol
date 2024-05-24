@@ -98,7 +98,7 @@ contract AmplolTest is Test {
         uint256 amount = 1e18;
 
         vm.expectEmit(true, true, true, true, address(amplol));
-        emit Transfer(address(0), vm.addr(account), amount * FUN / startTotalBalance);
+        emit Transfer(address(0), vm.addr(account), amount * FUN * 1e18 / startTotalBalance);
         amplol.mint(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), amount * FUN);
@@ -119,7 +119,7 @@ contract AmplolTest is Test {
         amplol.mint(vm.addr(account), amount);
 
         vm.expectEmit(true, true, true, true, address(amplol));
-        emit Transfer(vm.addr(account), address(0), amount * FUN / startTotalBalance);
+        emit Transfer(vm.addr(account), address(0), amount * FUN * 1e18 / startTotalBalance);
         vm.prank(address(vault));
         amplol.burn(vm.addr(account), amount);
 
@@ -168,7 +168,7 @@ contract AmplolTest is Test {
         vault.setTotalBalance(startTotalBalance * 4);
 
         vm.prank(address(vault));
-        amplol.mint(alice, 1);
+        amplol.mint(alice, 0);
 
         tvl = amplol.tvl();
         assertEq(tvl, startTotalBalance * 4);

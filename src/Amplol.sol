@@ -36,21 +36,21 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
         _rebase();
-        _mint(_recipient, _amount * FUN / tvl);
+        _mint(_recipient, _amount * FUN * 1e18 / tvl);
     }
 
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadBurner();
-        _burn(_recipient, Math.min(super.balanceOf(_recipient), _amount * FUN / tvl));
+        _burn(_recipient, Math.min(super.balanceOf(_recipient), _amount * FUN * 1e18 / tvl));
         _rebase();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return super.balanceOf(account) * tvl;
+        return super.balanceOf(account) * tvl / 1e18;
     }
 
     function totalSupply() public view override returns (uint256) {
-        return super.totalSupply() * tvl;
+        return super.totalSupply() * tvl / 1e18;
     }
 
     function _rebase() internal {
