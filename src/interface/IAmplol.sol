@@ -14,6 +14,8 @@ interface IAmplol {
     event NewVault(address vault, uint256 tvl);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
+    event Mint(address indexed recipient, uint256 amount, uint256 tvl);
+    event Burn(address indexed recipient, uint256 amount, uint256 tvl);
 
     function setVault(address, uint256) external;
     function toggleTransfer() external;
