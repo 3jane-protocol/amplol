@@ -28,8 +28,8 @@ contract AmplolTest is Test {
     event NewVault(address vault, uint256 tvl);
     event ToggleTransfer(bool canTransfer);
     event Rebase(uint256 pTVL, uint256 tvl, uint256 pRebase);
-    event Mint(uint256 amount, uint256 tvl);
-    event Burn(uint256 amount, uint256 tvl);
+    event Mint(address indexed recipient, uint256 amount, uint256 tvl);
+    event Burn(address indexed recipient, uint256 amount, uint256 tvl);
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function setUp() public {
@@ -101,7 +101,7 @@ contract AmplolTest is Test {
 
         vm.expectEmit(true, true, true, true, address(amplol));
         emit Transfer(address(0), vm.addr(account), amount * FUN * 1e18 / startTotalBalance);
-        emit Mint(amount * FUN * 1e18 / startTotalBalance, startTotalBalance);
+        emit Mint(vm.addr(account), amount * FUN * 1e18 / startTotalBalance, startTotalBalance);
         amplol.mint(vm.addr(account), amount);
 
         assertEq(amplol.balanceOf(vm.addr(account)), amount * FUN);
@@ -123,7 +123,7 @@ contract AmplolTest is Test {
 
         vm.expectEmit(true, true, true, true, address(amplol));
         emit Transfer(vm.addr(account), address(0), amount * FUN * 1e18 / startTotalBalance);
-        emit Burn(amount * FUN * 1e18 / startTotalBalance, startTotalBalance);
+        emit Burn(vm.addr(account), amount * FUN * 1e18 / startTotalBalance, startTotalBalance);
         vm.prank(address(vault));
         amplol.burn(vm.addr(account), amount);
 
