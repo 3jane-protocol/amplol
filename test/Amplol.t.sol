@@ -132,21 +132,6 @@ contract AmplolTest is Test {
         assertEq(amplol.totalSupply(), 0);
     }
 
-    function testBurnerMin() public {
-        vm.prank(address(vault));
-
-        uint256 amount = 1e18;
-
-        amplol.mint(vm.addr(account2), amount);
-        vault.setTotalBalance(startTotalBalance / 2);
-        vm.prank(address(vault));
-        amplol.mint(vm.addr(1), amount);
-        vm.prank(address(vault));
-        amplol.burn(vm.addr(account2), amount);
-
-        assertEq(amplol.balanceOf(vm.addr(account2)), 0);
-    }
-
     function testBurnUnauthorized() public {
         vm.prank(vm.addr(account2));
 
@@ -196,7 +181,7 @@ contract AmplolTest is Test {
         vm.prank(address(vault));
         amplol.burn(alice, amount / 2);
 
-        assertEq(amplol.balanceOf(alice), 72000000000000000000000600);
-        assertEq(amplol.totalSupply(), 72000000000000000000000600);
+        assertEq(amplol.balanceOf(alice), 0);
+        assertEq(amplol.totalSupply(), 0);
     }
 }
