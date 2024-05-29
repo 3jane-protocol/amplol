@@ -17,7 +17,7 @@ contract AmplolTest is Test {
     Amplol public amplol;
     MockVault public vault;
 
-    uint256 private constant FUN = 888;
+    uint256 private constant FUN = 8 * 1e6;
     uint256 private constant BASE = 300 * 1e18;
     string public name = "AMPLOL";
     string public symbol = "AMPLOL";
@@ -105,8 +105,8 @@ contract AmplolTest is Test {
         emit Mint(vm.addr(account), amount * FUN * 1e18 / BASE, BASE);
         amplol.mint(vm.addr(account), amount);
 
-        assertEq(amplol.balanceOf(vm.addr(account)), amount * FUN);
-        assertEq(amplol.totalSupply(), amount * FUN);
+        assertEq(amplol.balanceOf(vm.addr(account)), (amount * FUN * 1e18 / BASE) * BASE / 1e18);
+        assertEq(amplol.totalSupply(), (amount * FUN * 1e18 / BASE) * BASE / 1e18);
     }
 
     function testMintUnauthorized() public {
@@ -187,8 +187,6 @@ contract AmplolTest is Test {
         // Her AMPLOL balance has increased because of the rebase mechanism since
         // the TVL went up 2x.
 
-        uint256 finalRatio = (startTotalBalance * 4 + BASE) / (startTotalBalance * 2 + BASE);
-
         assertEq(
             amplol.balanceOf(alice), amount * (startTotalBalance * 4 + BASE) / (startTotalBalance * 2 + BASE) * FUN
         );
@@ -198,7 +196,7 @@ contract AmplolTest is Test {
         vm.prank(address(vault));
         amplol.burn(alice, amount / 2);
 
-        assertEq(amplol.balanceOf(alice), 7992000000000000000100);
-        assertEq(amplol.totalSupply(), 7992000000000000000100);
+        assertEq(amplol.balanceOf(alice), 72000000000000000000000600);
+        assertEq(amplol.totalSupply(), 72000000000000000000000600);
     }
 }
