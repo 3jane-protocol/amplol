@@ -17,7 +17,7 @@ contract AmplolTest is Test {
     Amplol public amplol;
     MockVault public vault;
 
-    uint256 private constant FUN = 888;
+    uint256 private constant FUN = 8888;
     uint256 private constant BASE = 300 * 1e18;
     string public name = "AMPLOL";
     string public symbol = "AMPLOL";
