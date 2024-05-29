@@ -9,7 +9,7 @@ abstract contract AmplolStore is IAmplol {
     // Previous Rebase
     uint256 public pRebase;
     // TVL
-    uint256 public tvl;
+    uint256 internal tvl;
     // Can transfer
     bool public canTransfer;
     // 3Jane vault

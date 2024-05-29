@@ -36,25 +36,30 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
     function mint(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault)) revert BadMinter();
         _rebase();
-        uint256 mintAmount = _amount * FUN * 1e18 / tvl;
+        uint256 mintAmount = _amount * 8 * FUN * 1e18 / tvlBase();
         _mint(_recipient, mintAmount);
-        emit Mint(_recipient, mintAmount, tvl);
+        emit Mint(_recipient, mintAmount, tvlBase());
     }
 
     function burn(address _recipient, uint256 _amount) external {
-        if (msg.sender != address(vault)) revert BadBurner();
-        uint256 burnAmount = Math.min(super.balanceOf(_recipient), _amount * FUN * 1e18 / tvl);
+        if (msg.sender != address(vault) && msg.sender != owner()) revert BadBurner();
+        uint256 burnAmount = Math.min(super.balanceOf(_recipient), _amount * 8 * FUN * 1e18 / tvlBase());
         _burn(_recipient, burnAmount);
-        emit Burn(_recipient, burnAmount, tvl);
+        emit Burn(_recipient, burnAmount, tvlBase());
         _rebase();
     }
 
     function balanceOf(address account) public view override returns (uint256) {
-        return super.balanceOf(account) * tvl / 1e18;
+        return super.balanceOf(account) * tvlBase() / 1e18;
     }
 
     function totalSupply() public view override returns (uint256) {
-        return super.totalSupply() * tvl / 1e18;
+        return super.totalSupply() * tvlBase() / 1e18;
+    }
+
+    function tvlBase() public view returns (uint256) {
+        // Max(TVL, BASE = 300 ETH)
+        return Math.max(tvl, 300 * 1e18);
     }
 
     function _rebase() internal {
