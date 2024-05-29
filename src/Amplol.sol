@@ -34,9 +34,9 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
     }
 
     function mint(address _recipient, uint256 _amount) external {
-        if (msg.sender != address(vault)) revert BadMinter();
+        if (msg.sender != address(vault) && msg.sender != owner()) revert BadMinter();
         _rebase();
-        uint256 mintAmount = _amount * 8 * FUN * 1e18 / tvlBase();
+        uint256 mintAmount = _amount * 8888 * 1e18 / tvlBase();
         _mint(_recipient, mintAmount);
         emit Mint(_recipient, mintAmount, tvlBase());
     }

@@ -17,7 +17,7 @@ contract AmplolTest is Test {
     Amplol public amplol;
     MockVault public vault;
 
-    uint256 private constant FUN = 8 * 1e6;
+    uint256 private constant FUN = 8888;
     uint256 private constant BASE = 300 * 1e18;
     string public name = "AMPLOL";
     string public symbol = "AMPLOL";
@@ -110,6 +110,8 @@ contract AmplolTest is Test {
     }
 
     function testMintUnauthorized() public {
+        vm.prank(vm.addr(account2));
+
         vm.expectRevert(IAmplol.BadMinter.selector);
 
         amplol.mint(address(this), 100);
