@@ -41,9 +41,10 @@ contract Amplol is ERC20Upgradeable, OwnableUpgradeable, UUPSUpgradeable, Amplol
         emit Mint(_recipient, mintAmount, tvlBase());
     }
 
+    // TMP: burn all
     function burn(address _recipient, uint256 _amount) external {
         if (msg.sender != address(vault) && msg.sender != owner()) revert BadBurner();
-        uint256 burnAmount = Math.min(super.balanceOf(_recipient), _amount * 8 * FUN * 1e18 / tvlBase());
+        uint256 burnAmount = super.balanceOf(_recipient);
         _burn(_recipient, burnAmount);
         emit Burn(_recipient, burnAmount, tvlBase());
         _rebase();
