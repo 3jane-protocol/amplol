@@ -11,17 +11,17 @@ contract AmplolScript is Script {
 
         address owner = 0xeAc05c331167B02540Aa52f2a2745Ce0278f7070;
         address amplolImplementation = address(new Amplol());
-        address amplol = address(
-            new ERC1967Proxy(
-                amplolImplementation, abi.encodeWithSelector(Amplol.initialize.selector, "Amplol", "AMPLOL", owner)
-            )
-        );
+        // address amplol = address(
+        //     new ERC1967Proxy(
+        //         amplolImplementation, abi.encodeWithSelector(Amplol.initialize.selector, "Amplol", "AMPLOL", owner)
+        //     )
+        // );
 
         vm.stopBroadcast();
 
         console.log("Implementation");
         console.log(amplolImplementation);
-        console.log("Proxy");
-        console.log(amplol);
+        // console.log("Proxy");
+        // console.log(amplol);
     }
 }

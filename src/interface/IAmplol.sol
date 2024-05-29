@@ -19,7 +19,7 @@ interface IAmplol {
 
     function setVault(address, uint256) external;
     function toggleTransfer() external;
-    function tvl() external view returns (uint256);
+    function tvlBase() external view returns (uint256);
     function vault() external view returns (IVault);
     function canTransfer() external view returns (bool);
     function pRebase() external view returns (uint256);
